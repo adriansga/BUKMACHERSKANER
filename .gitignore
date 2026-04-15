@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# DB
+*.db
+PROJEKTY/AKTYWNE/SKANER BUKMACHERÓW/db/tracker.db
+
+# Secrets
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+PROJEKTY/AKTYWNE/SKANER BUKMACHERÓW/logs/scanner.log
+
+# Google Drive Files
+*.gdoc
+*.gsheet
+*.gslides
+*.gdraw
