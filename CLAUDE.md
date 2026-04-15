@@ -46,9 +46,8 @@ Aby system działał w chmurze (GitHub/Vercel), muszą być ustawione te klucze:
 
 ---
 
-## 🤖 STATUS BETTING BOTA (STS)
-- [x] Selenium Setup (Chrome Headless)
-- [x] Logika wyszukiwania meczu
-- [x] Inteligentne dopasowanie nazw (Fuzzy)
-- [ ] Logika wyboru przycisku kursu (1/X/2)
-- [ ] Wpisywanie stawki i autoryzacja
+## 🚀 TODO DLA KOLEJNYCH AGENTÓW (Priorytety):
+1. **[ ] Results Fetcher:** Dodać moduł sprawdzający wyniki meczów i aktualizujący status w Supabase (win/loss).
+2. **[ ] Surebet Engine:** Dodać wykrywanie arbitrażu międzbukmacherskiego.
+3. **[ ] STS Verification:** Po wpisaniu hasła przez Adriana, przetestować logowanie i przygotowanie kuponu "na żywo".
+4. **[ ] Vercel Polish:** Przetłumaczyć dashboard na polski i dodać wykresy realnego zysku.
