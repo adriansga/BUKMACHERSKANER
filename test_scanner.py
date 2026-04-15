@@ -4,7 +4,7 @@ import os
 # Dodaj główny katalog projektu do PYTHONPATH
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from skaner-bukmacherow.core.calculator import remove_margin, calculate_ev, calculate_kelly, process_game
+from skaner_bukmacherow.core.calculator import remove_margin, calculate_ev, calculate_kelly, process_game
 
 def test_math_logic():
     print("--- TEST LOGIKI MATEMATYCZNEJ ---")
@@ -64,7 +64,7 @@ def test_process_game():
     }
     
     # Konfiguracja tymczasowa dla testu
-    import skaner-bukmacherow.config.settings as settings
+    import skaner_bukmacherow.config.settings as settings
     settings.TARGET_BOOKMAKERS = ['sts_pl']
     
     opps = process_game(mock_game)

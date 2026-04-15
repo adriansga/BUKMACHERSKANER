@@ -1,6 +1,6 @@
 import sqlite3
 import logging
-from skaner-bukmacherow.config import settings
+from skaner_bukmacherow.config import settings
 
 class DatabaseManager:
     def __init__(self):

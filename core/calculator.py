@@ -1,5 +1,5 @@
 import logging
-from skaner-bukmacherow.config import settings
+from skaner_bukmacherow.config import settings
 
 def remove_margin(odds_list):
     """
