@@ -1,11 +1,15 @@
 import time
 import logging
 import asyncio
+import argparse
 from ValueBetScanner.api.odds_fetcher import OddsFetcher
 from ValueBetScanner.core.calculator import process_game
 from ValueBetScanner.db.database_manager import DatabaseManager
+from PROJEKTY.AKTYWNE.skaner-bukmacherow.db.supabase_manager import SupabaseManager
 from ValueBetScanner.notifications.notifier import Notifier
 from ValueBetScanner.config import settings
+from PROJEKTY.AKTYWNE.skaner-bukmacherow.core.betting_bot import STSBettingBot
+from PROJEKTY.AKTYWNE.skaner-bukmacherow.core.results_fetcher import ResultsFetcher
 
 # Konfiguracja logowania
 logging.basicConfig(
@@ -16,9 +20,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
-import argparse
-from PROJEKTY.AKTYWNE.SKANER BUKMACHERÓW.db.supabase_manager import SupabaseManager
 
 async def main():
     parser = argparse.ArgumentParser()
@@ -31,6 +32,8 @@ async def main():
     db_local = DatabaseManager()
     db_cloud = SupabaseManager()
     notifier = Notifier()
+    bet_bot = STSBettingBot()
+    results_fetcher = ResultsFetcher()
     
     # Weryfikacja Cloud Sync
     if db_cloud.enabled:
@@ -39,31 +42,40 @@ async def main():
         logging.warning("⚠️ Supabase: Brak połączenia chmurowego (sprawdź klucze w .env/Secrets).")
         
     if notifier.bot:
-        logging.info("✅ Telegram: Bot AKTYWNY (Alerty będą wysyłane).")
+        logging.info("✅ Telegram: Bot AKTYWNY.")
     else:
-        logging.warning("⚠️ Telegram: Bot NIEAKTYWNY (sprawdź token).")
+        logging.warning("⚠️ Telegram: Bot NIEAKTYWNY.")
     
     sports_to_scan = [
-        'soccer_poland_ekstraklasa', 'soccer_uefa_champs_league', 
-        'soccer_england_premier_league', 'soccer_germany_bundesliga'
+        'soccer_poland_ekstraklasa', 
+        'soccer_uefa_champs_league', 
+        'soccer_england_premier_league', 
+        'soccer_germany_bundesliga',
+        'soccer_spain_la_liga'
     ]
     
     while True:
         try:
+            # 1. SKANOWANIE NOWYCH OKAZJI
             for sport in sports_to_scan:
+                logging.info(f"Skanowanie sportu: {sport}")
                 data = fetcher.fetch_odds(sport)
-                if not data: continue
+                
+                if not data:
+                    continue
                 
                 for game in data:
                     opportunities = process_game(game)
                     for opp in opportunities:
-                        # Zapis lokalny
-                        new_local = db_local.save_opportunity(opp)
-                        # Zapis chmurowy
-                        new_cloud = db_cloud.save_opportunity(opp)
+                        # Zapisywanie (zwraca True jeśli nowa okazja)
+                        is_new_local = db_local.save_opportunity(opp)
+                        is_new_cloud = db_cloud.save_opportunity(opp)
                         
-                        if new_local or new_cloud:
+                        if is_new_local or is_new_cloud:
+                            logging.info(f"NOWA OKAZJA: {opp['game']} | {opp['outcome']} @ {opp['odds']}")
                             await notifier.send_alert(opp)
+                            
+                            # Betting Bot (tylko jeśli mamy dane logowania)
                             if opp['bookmaker'] == 'STS' and settings.STS_USERNAME != "TWÓJ_LOGIN":
                                 try:
                                     bet_bot.setup_driver(headless=True)
@@ -72,24 +84,23 @@ async def main():
                                     bet_bot.close()
                                 except Exception as e:
                                     logging.error(f"Błąd Betting Bota: {str(e)}")
-            
-            if args.once:
-                logging.info("Opcja --once aktywna. Zakończono skanowanie.")
-                break
-
-            logging.info("Koniec cyklu. Czekam 60 sekund...")
-            await asyncio.sleep(60) 
                 
                 # Respektujemy limity zapytań
                 remaining = fetcher.get_remaining_requests()
                 logging.info(f"Pozostało zapytań API: {remaining}")
-                
-                # Krótka pauza między sportami
-                await asyncio.sleep(5)
-            
-            # Główna pauza pętli - ZMNIEJSZONA DLA TESTÓW (Częste odświeżanie)
-            logging.info("Koniec cyklu. Czekam 60 sekund...")
-            await asyncio.sleep(60) 
+                await asyncio.sleep(2)
+
+            # 2. SPRAWDZANIE WYNIKÓW (Raz na cykl)
+            logging.info("Aktualizacja wyników meczów...")
+            for sport in sports_to_scan:
+                results_fetcher.fetch_and_update_results(sport)
+
+            if args.once:
+                logging.info("Opcja --once aktywna. Zakończono pracę.")
+                break
+
+            logging.info(f"Cykl zakończony. Czekam {settings.MIN_POLLING_INTERVAL}s...")
+            await asyncio.sleep(settings.MIN_POLLING_INTERVAL)
             
         except Exception as e:
             logging.error(f"Błąd w pętli głównej: {str(e)}")
