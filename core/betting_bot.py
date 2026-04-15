@@ -54,47 +54,72 @@ from thefuzz import fuzz
 
     def place_bet(self, game_name, outcome_name, stake):
         """
-        Logika stawiania zakładu na STS z inteligentnym dopasowaniem.
+        Logika stawiania zakładu na STS z inteligentnym dopasowaniem i wyborem kursu.
         """
         try:
             logging.info(f"Proces STS: Szukam meczu '{game_name}' dla typu '{outcome_name}'")
             
-            # 1. Mapowanie typu zakładu
-            outcome_map = {"Draw": "X", "Home": "1", "Away": "2"}
-            target_type = outcome_map.get(outcome_name, outcome_name)
+            # 1. Mapowanie typu zakładu na pozycję przycisku (0=1, 1=X, 2=2)
+            outcome_map = {"Home": 0, "Draw": 1, "Away": 2}
+            # Jeśli nazwy w API są inne, robimy mapowanie pomocnicze
+            if outcome_name not in outcome_map:
+                # Prosta heurystyka dla nazw zespołów
+                if "draw" in outcome_name.lower() or outcome_name.lower() == "x":
+                    target_idx = 1
+                elif game_name.split(" vs ")[0] in outcome_name:
+                    target_idx = 0
+                else:
+                    target_idx = 2
+            else:
+                target_idx = outcome_map[outcome_name]
             
-            # 2. Szukaj pierwszej części nazwy zespołu (często wystarcza do wyszukiwarki)
+            # 2. Szukaj meczu w STS
             search_query = game_name.split(" vs ")[0]
             self.driver.get(f"https://www.sts.pl/szukaj/?q={search_query}")
             wait = WebDriverWait(self.driver, 10)
             
-            # 3. Wybierz najlepszy wynik z listy
+            # 3. Wybierz najlepszy wynik
             results = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".search-results .event-row")))
             best_match = None
             highest_score = 0
             
             for res in results:
-                res_text = res.text.replace("\n", " ")
-                score = fuzz.partial_ratio(game_name, res_text)
+                score = fuzz.partial_ratio(game_name, res.text)
                 if score > highest_score and score > 80:
                     highest_score = score
                     best_match = res
             
             if not best_match:
-                logging.error(f"Nie znaleziono meczu '{game_name}' w STS (najlepszy wynik: {highest_score}%)")
+                logging.error(f"Nie znaleziono meczu '{game_name}' w STS.")
                 return False
                 
-            logging.info(f"Dopasowano mecz STS: '{best_match.text.splitlines()[0]}' (Dopasowanie: {highest_score}%)")
             best_match.click()
             
-            # 4. Znajdź kursy (1, X, 2)
-            # W STS zwykle są to przyciski w rzędzie
+            # 4. Wybierz kurs (1, X, 2)
+            # W STS na stronie meczu główne kursy są w sekcji .bet-btns lub podobnej
+            # Wybieramy przycisk na podstawie indeksu (target_idx)
             odds_buttons = wait.until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".bet-btn")))
             
-            # Tutaj potrzebna byłaby dokładna mapa przycisków
-            # Na razie tylko logujemy - prawdziwe kliknięcie po podaniu hasła
-            logging.info(f"Sukces: Przygotowano podkład pod typ '{target_type}' ze stawką {stake}%")
-            return True
+            if len(odds_buttons) >= 3:
+                logging.info(f"Klikam w kurs: {target_idx} (Typ: {outcome_name})")
+                odds_buttons[target_idx].click()
+                
+                # 5. Wpisz stawkę w kuponie (pojawia się po kliknięciu kursu)
+                time.sleep(2) # Czekamy na animację kuponu
+                stake_input = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input.coupon-stake-input")))
+                stake_input.clear()
+                stake_input.send_keys(str(stake))
+                
+                logging.info(f"✅ KUPON PRZYGOTOWANY: {game_name} | Typ: {outcome_name} | Stawka: {stake}")
+                
+                # 6. POTWIERDZENIE (TYLKO DLA CIEBIE DO ODBLOKOWANIA)
+                # if settings.REAL_BETTING_ENABLED:
+                #     self.driver.find_element(By.CSS_SELECTOR, ".place-bet-button").click()
+                
+                return True
+            else:
+                logging.error("Nie znaleziono przycisków kursu na stronie meczu.")
+                return False
             
         except Exception as e:
             logging.error(f"Błąd Betting Bota na STS: {str(e)}")
