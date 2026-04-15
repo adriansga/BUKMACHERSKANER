@@ -10,7 +10,7 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "YOUR_TOKEN_HERE")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "YOUR_CHAT_ID_HERE")
 
 # Stałe rynkowe
-MIN_EV_PERCENTAGE = 0.03  # Szukamy min. 3% przewagi
+MIN_EV_PERCENTAGE = 0.05  # Szukamy min. 5% przewagi (zmienione automatycznie)
 TARGET_BOOKMAKERS = ['betclic', 'unibet', 'bwin', 'sts_pl', 'fortuna', 'betfair_ex', 'williamhill']
 PINNACLE_KEY = 'pinnacle' # Klucz Pinnacle w The-Odds-API
 
