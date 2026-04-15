@@ -2,14 +2,14 @@ import time
 import logging
 import asyncio
 import argparse
-from ValueBetScanner.api.odds_fetcher import OddsFetcher
-from ValueBetScanner.core.calculator import process_game
-from ValueBetScanner.db.database_manager import DatabaseManager
-from PROJEKTY.AKTYWNE.skaner-bukmacherow.db.supabase_manager import SupabaseManager
-from ValueBetScanner.notifications.notifier import Notifier
-from ValueBetScanner.config import settings
-from PROJEKTY.AKTYWNE.skaner-bukmacherow.core.betting_bot import STSBettingBot
-from PROJEKTY.AKTYWNE.skaner-bukmacherow.core.results_fetcher import ResultsFetcher
+from skaner_bukmacherow.api.odds_fetcher import OddsFetcher
+from skaner_bukmacherow.core.calculator import process_game
+from skaner_bukmacherow.db.database_manager import DatabaseManager
+from skaner_bukmacherow.db.supabase_manager import SupabaseManager
+from skaner_bukmacherow.notifications.notifier import Notifier
+from skaner_bukmacherow.config import settings
+from skaner_bukmacherow.core.betting_bot import STSBettingBot
+from skaner_bukmacherow.core.results_fetcher import ResultsFetcher
 
 # Konfiguracja logowania
 logging.basicConfig(
@@ -26,7 +26,7 @@ async def main():
     parser.add_argument("--once", action="store_true", help="Wykonaj jeden skan i wyjdź")
     args = parser.parse_args()
 
-    logging.info("--- SKANER VALUE BETÓW URUCHOMIONY ---")
+    logging.info("--- SKANER VALUE BETÓW URUCHOMIONY (Cloud Enabled) ---")
     
     fetcher = OddsFetcher()
     db_local = DatabaseManager()
@@ -39,7 +39,7 @@ async def main():
     if db_cloud.enabled:
         logging.info("✅ Supabase: Połączenie chmurowe AKTYWNE.")
     else:
-        logging.warning("⚠️ Supabase: Brak połączenia chmurowego (sprawdź klucze w .env/Secrets).")
+        logging.warning("⚠️ Supabase: Brak połączenia chmurowego (sprawdź klucze).")
         
     if notifier.bot:
         logging.info("✅ Telegram: Bot AKTYWNY.")
@@ -67,7 +67,7 @@ async def main():
                 for game in data:
                     opportunities = process_game(game)
                     for opp in opportunities:
-                        # Zapisywanie (zwraca True jeśli nowa okazja)
+                        # Zapisywanie
                         is_new_local = db_local.save_opportunity(opp)
                         is_new_cloud = db_cloud.save_opportunity(opp)
                         
@@ -75,7 +75,7 @@ async def main():
                             logging.info(f"NOWA OKAZJA: {opp['game']} | {opp['outcome']} @ {opp['odds']}")
                             await notifier.send_alert(opp)
                             
-                            # Betting Bot (tylko jeśli mamy dane logowania)
+                            # Betting Bot (tylko jeśli mamy dane logowania STS)
                             if opp['bookmaker'] == 'STS' and settings.STS_USERNAME != "TWÓJ_LOGIN":
                                 try:
                                     bet_bot.setup_driver(headless=True)
@@ -88,7 +88,7 @@ async def main():
                 # Respektujemy limity zapytań
                 remaining = fetcher.get_remaining_requests()
                 logging.info(f"Pozostało zapytań API: {remaining}")
-                await asyncio.sleep(2)
+                await asyncio.sleep(5) # Krótka pauza między sportami
 
             # 2. SPRAWDZANIE WYNIKÓW (Raz na cykl)
             logging.info("Aktualizacja wyników meczów...")

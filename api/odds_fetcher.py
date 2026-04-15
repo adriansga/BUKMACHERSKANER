@@ -1,7 +1,7 @@
 import requests
 import time
 import logging
-from ValueBetScanner.config import settings
+from skaner-bukmacherow.config import settings
 
 class OddsFetcher:
     def __init__(self):

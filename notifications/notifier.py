@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from telegram import Bot
-from ValueBetScanner.config import settings
+from skaner-bukmacherow.config import settings
 
 class Notifier:
     def __init__(self):

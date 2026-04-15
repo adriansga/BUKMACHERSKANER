@@ -1,6 +1,6 @@
 import sqlite3
 import logging
-from ValueBetScanner.config import settings
+from skaner-bukmacherow.config import settings
 
 class DatabaseManager:
     def __init__(self):
