@@ -31,7 +31,17 @@ async def main():
     db_local = DatabaseManager()
     db_cloud = SupabaseManager()
     notifier = Notifier()
-    bet_bot = STSBettingBot()
+    
+    # Weryfikacja Cloud Sync
+    if db_cloud.enabled:
+        logging.info("✅ Supabase: Połączenie chmurowe AKTYWNE.")
+    else:
+        logging.warning("⚠️ Supabase: Brak połączenia chmurowego (sprawdź klucze w .env/Secrets).")
+        
+    if notifier.bot:
+        logging.info("✅ Telegram: Bot AKTYWNY (Alerty będą wysyłane).")
+    else:
+        logging.warning("⚠️ Telegram: Bot NIEAKTYWNY (sprawdź token).")
     
     sports_to_scan = [
         'soccer_poland_ekstraklasa', 'soccer_uefa_champs_league', 
