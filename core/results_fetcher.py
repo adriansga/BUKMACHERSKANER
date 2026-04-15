@@ -1,7 +1,7 @@
 import requests
 import logging
-from PROJEKTY.AKTYWNE.skaner_bukmacherow.config import settings
-from PROJEKTY.AKTYWNE.skaner_bukmacherow.db.supabase_manager import SupabaseManager
+from PROJEKTY.AKTYWNE.config import settings
+from PROJEKTY.AKTYWNE.db.supabase_manager import SupabaseManager
 
 class ResultsFetcher:
     def __init__(self):

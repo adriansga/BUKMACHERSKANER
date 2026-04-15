@@ -2,14 +2,14 @@ import time
 import logging
 import asyncio
 import argparse
-from skaner_bukmacherow.api.odds_fetcher import OddsFetcher
-from skaner_bukmacherow.core.calculator import process_game
-from skaner_bukmacherow.db.database_manager import DatabaseManager
-from skaner_bukmacherow.db.supabase_manager import SupabaseManager
-from skaner_bukmacherow.notifications.notifier import Notifier
-from skaner_bukmacherow.config import settings
-from skaner_bukmacherow.core.betting_bot import STSBettingBot
-from skaner_bukmacherow.core.results_fetcher import ResultsFetcher
+from api.odds_fetcher import OddsFetcher
+from core.calculator import process_game
+from db.database_manager import DatabaseManager
+from db.supabase_manager import SupabaseManager
+from notifications.notifier import Notifier
+from config import settings
+from core.betting_bot import STSBettingBot
+from core.results_fetcher import ResultsFetcher
 
 # Konfiguracja logowania
 logging.basicConfig(

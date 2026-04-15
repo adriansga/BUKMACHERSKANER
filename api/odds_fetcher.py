@@ -1,7 +1,7 @@
 import requests
 import time
 import logging
-from skaner_bukmacherow.config import settings
+from config import settings
 
 class OddsFetcher:
     def __init__(self):

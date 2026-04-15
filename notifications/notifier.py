@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from telegram import Bot
-from skaner_bukmacherow.config import settings
+from config import settings
 
 class Notifier:
     def __init__(self):
