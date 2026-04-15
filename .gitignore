@@ -39,3 +39,4 @@ PROJEKTY/AKTYWNE/SKANER BUKMACHERÓW/logs/scanner.log
 *.gsheet
 *.gslides
 *.gdraw
+.vercel

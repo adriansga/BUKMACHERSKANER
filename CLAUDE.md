@@ -1,6 +1,6 @@
 # CLAUDE.md - ValueBet Scanner & Betting Bot
 
-## 📝 PROJEKT: SKANER BUKMACHERÓW (ValueBet & Surebet)
+## 📝 PROJEKT: skaner-bukmacherow (ValueBet & Surebet)
 Automatyczny system skanujący rynki sportowe (The-Odds-API), porównujący kursy z Pinnacle (True Probability) i wykrywający okazje Expected Value (EV) u lokalnych bukmacherów (STS, Fortuna, etc.).
 
 ---
