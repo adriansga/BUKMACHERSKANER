@@ -1,0 +1,28 @@
+name: ValueBet Scanner Cloud Task
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # Skanuj co 30 minut (dla bezpieczeństwa limitów API)
+  workflow_dispatch: # Możliwość ręcznego odpalenia
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run Scanner
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          STS_USERNAME: ${{ secrets.STS_USERNAME }}
+          STS_PASSWORD: ${{ secrets.STS_PASSWORD }}
+        run: python main.py --once # Dodałem flagę --once aby zakończył pracę po jednym cyklu

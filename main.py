@@ -17,22 +17,25 @@ logging.basicConfig(
     ]
 )
 
-from PROJEKTY.AKTYWNE.skanerbukmacherow.core.betting_bot import STSBettingBot
+import argparse
+from PROJEKTY.AKTYWNE.SKANER BUKMACHERÓW.db.supabase_manager import SupabaseManager
 
 async def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--once", action="store_true", help="Wykonaj jeden skan i wyjdź")
+    args = parser.parse_args()
+
     logging.info("--- SKANER VALUE BETÓW URUCHOMIONY ---")
     
     fetcher = OddsFetcher()
-    db = DatabaseManager()
+    db_local = DatabaseManager()
+    db_cloud = SupabaseManager()
     notifier = Notifier()
     bet_bot = STSBettingBot()
     
-    # Lista sportów do skanowania
     sports_to_scan = [
-        'soccer_poland_ekstraklasa',
-        'soccer_uefa_champs_league',
-        'soccer_england_premier_league',
-        'soccer_germany_bundesliga'
+        'soccer_poland_ekstraklasa', 'soccer_uefa_champs_league', 
+        'soccer_england_premier_league', 'soccer_germany_bundesliga'
     ]
     
     while True:
@@ -44,18 +47,28 @@ async def main():
                 for game in data:
                     opportunities = process_game(game)
                     for opp in opportunities:
-                        if db.save_opportunity(opp):
+                        # Zapis lokalny
+                        new_local = db_local.save_opportunity(opp)
+                        # Zapis chmurowy
+                        new_cloud = db_cloud.save_opportunity(opp)
+                        
+                        if new_local or new_cloud:
                             await notifier.send_alert(opp)
-                            
-                            # Jeśli okazja jest w STS, spróbuj przygotować zakład
                             if opp['bookmaker'] == 'STS' and settings.STS_USERNAME != "TWÓJ_LOGIN":
                                 try:
-                                    bet_bot.setup_driver(headless=False) # Widoczne okno dla testów
+                                    bet_bot.setup_driver(headless=True)
                                     if bet_bot.login():
                                         bet_bot.place_bet(opp['game'], opp['outcome'], opp['kelly'])
                                     bet_bot.close()
                                 except Exception as e:
                                     logging.error(f"Błąd Betting Bota: {str(e)}")
+            
+            if args.once:
+                logging.info("Opcja --once aktywna. Zakończono skanowanie.")
+                break
+
+            logging.info("Koniec cyklu. Czekam 60 sekund...")
+            await asyncio.sleep(60) 
                 
                 # Respektujemy limity zapytań
                 remaining = fetcher.get_remaining_requests()
